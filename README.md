@@ -1,14 +1,14 @@
 # finalfinal
 
-finalfinal applies each client comment to a poster, saves it as the next `Final_vN`, and at version 27 hands back the first draft.
-
 ![finalfinal at Final_v27_FINALFINAL: the poster is back to the first draft, stamped "Client picked the first one"](site/screenshot-v27.png)
 
-*Screenshot from a real local run with gemma3:4b. Comments after v6 come from the built-in client thread; "norda" is a made-up brand.*
+*Real local run with gemma3:4b; versions after v7 come from the built-in client thread. "norda" is a made-up brand.*
 
-Part 1 of the series **Night Shift**: machines built in one night, explained in one sentence, and the trick behind each is shown at the end.
+finalfinal applies each client comment to a poster, saves it as the next `Final_vN`, and at version 27 hands back the first draft.
 
-**Status:** first working version. The page works on its own with a 14-rule rulebook; with the local server, comments go to a small Ollama model and a vision model scores each version. Tested on macOS with Chromium and gemma3:4b.
+Part 1 of **Night Shift**, a series of small machines built in one night. The trick in this one: a local model turns a vague comment into a list of design changes.
+
+**Status:** first working version. The page runs on its own with a built-in rulebook; with the local server, a small Ollama model reads the comments and scores each version.
 
 Revisions today run on email threads, screenshots with red circles and file names like `poster_final_v3_FINAL_use-this.pdf`. The comment is vague ("make it pop"), the result is a surprise to both sides, and the archive is a folder nobody can read. finalfinal is a toy about that loop, but the loop is real: a vague sentence becomes a measurable change on a layered SVG.
 
@@ -43,6 +43,8 @@ Two files are not part of the app: `demo.json` is the click script for the 15-se
 - The rulebook understands English only. The model reads other languages, but this was not tested.
 - One fixed poster. You cannot upload your own design yet, and versions are lost on reload.
 - The hosted page has no model; it is the rulebook version. Ollama is needed for the real thing.
+- The rulebook reads simple negation ("I hate the orange", "no more blue", "no shadow") for colours and shadows only. "Don't make it bigger" still makes it bigger, which is also how it goes in real life.
+- Tested on macOS with Chromium only.
 - No feature makes the client approve v2.
 
 ## Thanks

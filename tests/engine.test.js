@@ -23,6 +23,21 @@ assert.ok(white.applied.length && white.state.background.color !== "#FFFFFF");
 const junk = E.applyChanges(s, [{ element: "client", property: "mood", value: 1 }, { element: "background", property: "rotate", value: 9 }]);
 assert.strictEqual(junk.applied.length, 0);
 
+// Negation: a colour the client rejects is never the colour they get.
+const colourOf = (c) => E.ruleChanges(c).changes.find((x) => x.property === "color").value;
+assert.notStrictEqual(colourOf("I hate the orange"), "orange");
+assert.notStrictEqual(colourOf("no more blue please"), "blue");
+assert.ok(!["orange", "blue"].includes(colourOf("I dislike the orange and the blue")));
+assert.strictEqual(colourOf("not red, maybe green"), "green");
+assert.strictEqual(colourOf("I hate the orange, make it blue"), "blue");
+assert.strictEqual(colourOf("make it orange"), "orange");
+assert.strictEqual(E.ruleChanges("I hate the shadow").changes[0].value, "none");
+const hated = E.applyChanges(E.firstDraft(), E.ruleChanges("I hate the orange").changes);
+assert.ok(hated.applied.length > 0, "'I hate the orange' should visibly change the poster");
+
+// Naming the logo grows only the logo ("can" is not a product).
+assert.deepStrictEqual(E.ruleChanges("can we make the logo bigger").changes, [{ element: "logo", property: "size", value: 1.3 }]);
+
 const names = [1, 2, 10, 11, 12, 19, 26, 27, 28].map(E.versionName);
 console.log(names.join("  "));
 assert.deepStrictEqual(names.slice(0, 3), ["Final_v1", "Final_v2", "Final_v10"]);

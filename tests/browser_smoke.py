@@ -20,7 +20,7 @@ BASE = args[0] if args else "http://127.0.0.1:5027/"
 SHOTS = "--shots" in sys.argv
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-COMMENTS = ["make the logo bigger", "make it pop a bit more", "the white could be whiter", "more premium", "our audience is younger"]
+COMMENTS = ["can we make the logo bigger", "I hate the orange","make it pop a bit more", "the white could be whiter", "more premium", "our audience is younger"]
 
 
 def main():
@@ -60,9 +60,11 @@ def main():
         page.click("#play")
         page.wait_for_selector("#stage.surprise", timeout=30000)
         print("playback reached the surprise in %.1fs; stamp:" % (time.time() - t), page.inner_text("#stamp").replace("\n", " "))
-        if SHOTS:
-            page.screenshot(path=os.path.join(HERE, "site", "screenshot-v27.png"))
         page.wait_for_function("!document.getElementById('play').disabled", timeout=30000)
+        assert page.evaluate("document.getElementById('stage').classList.contains('surprise')"), "playback should end on v27"
+        if SHOTS:  # taken after playback ends, so the buttons are not dimmed
+            page.wait_for_timeout(300)
+            page.screenshot(path=os.path.join(HERE, "site", "screenshot-v27.png"))
 
         with page.expect_download() as dl:
             page.click("#download")
