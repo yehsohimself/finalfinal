@@ -122,11 +122,40 @@
   const WORDS = {
     title: /\b(title|headline|heading|text|copy|type|font|words?|tagline)\b/,
     logo: /\b(logo|brand|mark|branding)\b/,
-    product: /\b(product|packshot|circle|can|bottle|ball|hero)\b/,
+    product: /\b(product|packshot|circle|bottle|ball|hero)\b/,
     background: /\b(background|bg|backdrop|white space|whitespace)\b/,
   };
   function mentioned(text) { return ELEMENTS.filter((el) => WORDS[el].test(text)); }
   const C = (element, property, value) => ({ element, property, value });
+
+  // Negation: "I hate the orange", "no more blue", "not red, maybe green". A rejected colour is never the answer.
+  const HUES = ["red", "orange", "yellow", "green", "teal", "blue", "purple", "pink"];
+  const AWAY_FROM = { red: "green", orange: "blue", yellow: "purple", green: "pink", teal: "red", blue: "orange", purple: "yellow", pink: "teal" };
+  const NEG = "(?:hate|hates|dislike|don'?t like|do not like|not a fan of|can'?t stand|sick of|tired of|no more|no|not|never|less|lose|ditch|drop|remove|get rid of|without|instead of|enough)";
+  const NEG_BEFORE = (word) => new RegExp("\\b" + NEG + "\\b(?:\\s+(?:the|this|that|all|any|of|so|much|more|with|it|that's|is|too))*\\s+(?:" + word + ")\\b");
+  // A clause that holds a negation rejects every colour named after it: "I dislike the orange and the blue".
+  // Clauses end at punctuation or at a turn like "but", "maybe", "try", "go for", "make it".
+  function rejectedHues(t) {
+    const out = new Set();
+    for (const clause of t.split(/[.,;!?]|\b(?:but|maybe|try|go for|make it|prefer|rather|how about)\b/)) {
+      const neg = clause.search(new RegExp("\\b" + NEG + "\\b"));
+      HUES.forEach((h) => {
+        const at = clause.search(new RegExp("\\b" + h + "\\b"));
+        if (at < 0) return;
+        if ((neg >= 0 && neg < at) || new RegExp("\\b" + h + "\\b.*\\b(?:is|looks|feels)\\s+(?:awful|ugly|wrong|bad|terrible|too much|horrible)").test(clause)) out.add(h);
+      });
+    }
+    return HUES.filter((h) => out.has(h));
+  }
+  function pickHue(t) {
+    const no = rejectedHues(t);
+    const named = [...t.matchAll(new RegExp("\\b(" + HUES.join("|") + ")\\b", "g"))].map((x) => x[1]);
+    const wanted = named.find((h) => !no.includes(h));
+    if (wanted) return wanted;
+    const seen = new Set();
+    for (let h = AWAY_FROM[no[0]]; h && !seen.has(h); h = AWAY_FROM[h]) { if (!no.includes(h)) return h; seen.add(h); }
+    return HUES.find((h) => !no.includes(h)) || "desaturate";
+  }
 
   const RULES = [
     { id: "whiter", test: /whiter|more white|brighter white|white.*white/, run: () => [C("background", "color", "whiter")],
@@ -145,14 +174,14 @@
       reply: "Heavier weight. More confident, apparently." },
     { id: "minimal", test: /minimal|clean|simple|apple|scandi|less busy|calm/, run: () => [C("product", "shadow", 0), C("title", "weight", 200), C("background", "color", "#F5F5F2"), C("product", "color", "desaturate")],
       reply: "Removed everything that was not paid for." },
-    { id: "shadow", test: /shadow|depth|3d|lift|float/, run: (m) => [C(m.find((e) => e !== "background") || "product", "shadow", "more")],
-      reply: "Drop shadow. It is 2004 again." },
+    { id: "shadow", test: /shadow|depth|3d|lift|float/, run: (m, t) => [C(m.find((e) => e !== "background") || "product", "shadow", NEG_BEFORE("shadow|depth|3d").test(t) ? "none" : "more")],
+      reply: (t) => (NEG_BEFORE("shadow|depth|3d").test(t) ? "Shadow removed. Flat is back." : "Drop shadow. It is 2004 again.") },
     { id: "warmer", test: /warm|cosy|cozy|summer|sunny/, run: () => [C("background", "color", "warmer"), C("product", "color", "orange")],
       reply: "Warmer. Like a summer you were not invited to." },
     { id: "cooler", test: /cool|cold|winter|tech|corporate/, run: () => [C("background", "color", "cooler"), C("product", "color", "blue")],
       reply: "Cooler. Very corporate. Very winter." },
-    { id: "colour", test: /\b(red|orange|yellow|green|teal|blue|purple|pink)\b/, run: (m, t) => [C(m[0] || "product", "color", t.match(/\b(red|orange|yellow|green|teal|blue|purple|pink)\b/)[1])],
-      reply: "New colour, same idea." },
+    { id: "colour", test: new RegExp("\\b(" + HUES.join("|") + ")\\b"), run: (m, t) => [C(m[0] || "product", "color", pickHue(t))],
+      reply: (t) => (rejectedHues(t).length ? "Noted. Anything but " + rejectedHues(t).join(" or ") + "." : "New colour, same idea.") },
     { id: "move", test: /\b(left|right|up|down|higher|lower|top|bottom|center|centre|middle)\b/, run: (m, t) => [C(m.find((e) => e !== "background") || "logo", "position",
         /higher/.test(t) ? "up" : /lower/.test(t) ? "down" : /middle/.test(t) ? "center" : t.match(/\b(left|right|up|down|top|bottom|center|centre)\b/)[1])],
       reply: "Moved. Forty pixels of progress." },
@@ -166,7 +195,8 @@
     const m = mentioned(t);
     const hits = RULES.filter((r) => r.test.test(t));
     if (!hits.length) return { changes: [C("logo", "size", 1.3)], reply: "Not sure what that meant, so the logo is bigger. It is always the logo.", rules: ["default"] };
-    return { changes: hits.flatMap((r) => r.run(m, t)), reply: hits[0].reply, rules: hits.map((r) => r.id) };
+    const reply = typeof hits[0].reply === "function" ? hits[0].reply(t) : hits[0].reply;
+    return { changes: hits.flatMap((r) => r.run(m, t)), reply, rules: hits.map((r) => r.id) };
   }
 
   // ---------- version names ----------
