@@ -1,10 +1,10 @@
 # finalfinal
 
-![finalfinal: a poster after six client comments, with the version strip and drift curve below](site/screenshot.png)
+finalfinal applies each client comment to a poster, saves it as the next `Final_vN`, and at version 27 hands back the first draft.
+
+![finalfinal at Final_v27_FINALFINAL: the poster is back to the first draft, stamped "Client picked the first one"](site/screenshot-v27.png)
 
 *Screenshot from a real local run with gemma3:4b. Comments after v6 come from the built-in client thread; "norda" is a made-up brand.*
-
-finalfinal turns a client comment into a concrete change to a poster, saves each result as the next `Final_vN`, and plays the whole revision history back.
 
 Part 1 of the series **Night Shift**: machines built in one night, explained in one sentence, and the trick behind each is shown at the end.
 
@@ -21,17 +21,20 @@ Revisions today run on email threads, screenshots with red circles and file name
 
 ## Try it
 
-1. Without anything installed: open `site/index.html` in a browser. This uses the rulebook only.
-2. For the model: install [Ollama](https://ollama.com), then `ollama pull gemma3:4b`
-3. `git clone https://github.com/OWNER/finalfinal && cd finalfinal`
+1. `git clone https://github.com/yehsohimself/finalfinal && cd finalfinal`
+2. Without anything installed: `open site/index.html` (or double-click it). This uses the rulebook only.
+3. For the model: install [Ollama](https://ollama.com), then `ollama pull gemma3:4b`
 4. `uv run server.py` (or `pip install flask && python3 server.py`)
 5. Open http://127.0.0.1:5027, type what your client said, press Enter.
 6. Press **Run a client thread** to reach v27, then **▶ Play all versions**.
 
 Other models: `FINALFINAL_MODEL=llama3.2:3b FINALFINAL_VISION_MODEL=gemma3:4b uv run server.py`. Tests: `node tests/engine.test.js` and, with Playwright's Chromium, `uv run tests/browser_smoke.py`.
 
+Two files are not part of the app: `demo.json` is the click script for the 15-second demo recording (replay it with `uv run tests/run_demo.py`), and `yayin.json` holds the repo name, description and topics for publishing.
+
 ## Known limits
 
+- The model's output changes from run to run. The same comment can give three changes one time and one the next; in one run "our audience is younger" produced a single change and the vision model scored it 3/10 for "met". The rulebook is the only deterministic path.
 - Tested with one model (gemma3:4b) on one machine. Other models may return JSON in other shapes; the server drops what it cannot read and the page falls back to the rulebook.
 - The riskiest assumption is untested: whether translations stay funny or become monotonous. Before the prompt was tuned, gemma3:4b answered most comments with "logo bigger". The agency glossary and examples in the prompt fixed that for the eight comments tried, not for a real client's twenty.
 - The vision model's scores are coarse (mostly 6-8 for "met"). Before the prompt was tuned it gave every version exactly 7 and 3, copied from the example. Treat its line as an opinion; the pixel line is the measurement.
