@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>finalfinal: client comments, actually applied</title>
+<meta name="description" content="Type a client comment, watch it applied to a poster, archive every Final_vN, play the whole revision history back.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <div class="series"><span class="moon" aria-hidden="true"></span><span class="tag">Night Shift</span><span class="ep">EP 01</span></div>
+  <h1>finalfinal</h1>
+  <p class="lede">Type what the client said. The machine applies it to the poster, saves it as the next Final_vN, and plays the whole revision history back.</p>
+
+  <section class="app" id="app">
+    <div>
+      <div class="stage" id="stage" aria-live="polite">
+        <div id="poster"></div>
+        <div class="stamp" id="stamp">Client picked<br>the first one</div>
+      </div>
+    </div>
+
+    <div>
+      <p class="filename" id="filename">Final_v1</p>
+      <div class="meta"><span class="mode" id="mode">Rulebook</span> · <span id="count">1 version</span></div>
+
+      <form class="ask" id="ask" autocomplete="off">
+        <input id="comment" name="comment" maxlength="300" placeholder="e.g. can we make the logo bigger?" aria-label="Client comment">
+        <button class="btn primary" id="send" type="submit">Apply</button>
+      </form>
+      <div class="chips" id="chips" aria-label="Comments clients really send">
+        <button type="button" class="chip">make the logo bigger</button>
+        <button type="button" class="chip">make it pop a bit more</button>
+        <button type="button" class="chip">the white could be whiter</button>
+        <button type="button" class="chip">more premium</button>
+        <button type="button" class="chip">our audience is younger</button>
+      </div>
+
+      <div class="card reply" id="reply"><span class="meta">Designer</span><br>First draft. Waiting for feedback.</div>
+      <ul class="changes" id="changes"></ul>
+      <div class="score" id="score"></div>
+
+      <div class="row tools">
+        <button class="btn primary" id="play" type="button">▶ Play all versions</button>
+        <button class="btn" id="autopilot" type="button">Run a client thread</button>
+        <button class="btn" id="download" type="button">Download contact sheet</button>
+        <button class="btn" id="reset" type="button">Start over</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="timeline" aria-label="Version history">
+    <div class="legend"><span><i></i>drift from v1, measured in pixels</span><span><i class="dash"></i>drift, as the vision model sees it</span><span style="color:var(--good)">✓n = comment met (model, /10)</span></div>
+    <div class="track" id="track">
+      <div class="lane" id="lane">
+        <svg class="curve" id="curve" aria-hidden="true"></svg>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+    </div>
+  </section>
+
+  <h2>How it works</h2>
+  <div class="grid">
+    <div><b>Four layers, six knobs.</b><br>The poster is an SVG with a title, a logo, a product and a background. A comment can only change size, colour, rotation, position, type weight or shadow.</div>
+    <div><b>A local model reads the comment.</b><br>Run it locally and the comment goes to a small model in Ollama, which returns a change list: <code>[{element, property, value}]</code>. Nothing leaves your machine.</div>
+    <div><b>A rulebook when there is no model.</b><br>This page works on its own with fourteen rules for the classics: bigger means +30%, pop means saturation plus a tilt, whiter means an optical brightener.</div>
+    <div><b>Every version is archived and scored.</b><br>Drift from v1 is measured pixel by pixel. With the local server on, a vision model also judges each version: was the comment met, and how far did we drift.</div>
+  </div>
+
+  <h2>Try it locally, with the model</h2>
+  <ol class="steps">
+    <li>Install <a href="https://ollama.com">Ollama</a> and pull a small vision model: <code>ollama pull gemma3:4b</code></li>
+    <li>Get the code: <code>git clone https://github.com/OWNER/finalfinal &amp;&amp; cd finalfinal</code></li>
+    <li>Start it: <code>uv run server.py</code> (or <code>pip install flask &amp;&amp; python3 server.py</code>)</li>
+    <li>Open <code>http://127.0.0.1:5027</code> and type what your client said.</li>
+  </ol>
+
+  <footer>
+    finalfinal is part 1 of <b>Night Shift</b>: machines built in one night, explained in one sentence. ·
+    <a href="https://github.com/OWNER/finalfinal">Source on GitHub</a> · MIT · No real brands were harmed: "norda" is made up.
+  </footer>
+</main>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
