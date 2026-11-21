@@ -1,0 +1,20 @@
+{
+  "sayfa": "site/index.html",
+  "adimlar": [
+    {"bekle": 800},
+    {"tikla": "#comment"},
+    {"yaz": ["#comment", "make the logo bigger"]},
+    {"tus": "Enter"},
+    {"bekle": 900},
+    {"yaz": ["#comment", "make it pop a bit more"]},
+    {"tus": "Enter"},
+    {"bekle": 900},
+    {"yaz": ["#comment", "the white could be whiter"]},
+    {"tus": "Enter"},
+    {"bekle": 900},
+    {"tikla": "#autopilot"},
+    {"bekle": 5000},
+    {"tikla": "#play"},
+    {"bekle": 13500}
+  ]
+}
